@@ -235,6 +235,17 @@ def handle_command(text):
         except Exception as e:
             return f"⚠️ Error: {e}"
 
+    if cmd == "/feed":
+        try:
+            subprocess.Popen(
+                ["/Library/Frameworks/Python.framework/Versions/3.11/bin/python3",
+                 "/Users/akshayreddy/email_assistant/linkedin_feed.py"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+            return "📰 Scanning your LinkedIn feed for quality posts... results coming shortly!"
+        except Exception as e:
+            return f"⚠️ Error: {e}"
+
     if cmd == "/applyjobs":
         try:
             subprocess.Popen(
@@ -254,6 +265,8 @@ def handle_command(text):
                 "/mystatus — view all applications + pipeline\n"
                 "/update [id] [stage] [note] — update application stage\n"
                 "  Stages: applied phone\\_screen interview offer rejected\n\n"
+                "*Networking:*\n"
+                "/feed — scan LinkedIn feed, approve comments + connections\n\n"
                 "*Daily:*\n"
                 "/schedule — today's calendar\n"
                 "/emails — last 2hrs email summary\n"
@@ -276,11 +289,16 @@ def run():
             for update in updates.get("result", []):
                 offset = update["update_id"] + 1
 
-                # Handle inline button taps (job approval/skip)
+                # Handle inline button taps
                 if "callback_query" in update:
+                    data = update.get("callback_query", {}).get("data", "")
                     try:
-                        from linkedin_apply import handle_callback
-                        handle_callback(update)
+                        if data.startswith(("fc_", "fco_", "fs_")):
+                            from linkedin_feed import handle_feed_callback
+                            handle_feed_callback(update)
+                        else:
+                            from linkedin_apply import handle_callback
+                            handle_callback(update)
                     except Exception as e:
                         print(f"Callback error: {e}")
                     continue
