@@ -45,16 +45,31 @@ def init_db():
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS jobs (
-            id          TEXT PRIMARY KEY,
-            title       TEXT,
-            company     TEXT,
-            location    TEXT,
-            url         TEXT,
-            status      TEXT DEFAULT 'pending',
-            found_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
-            applied_at  DATETIME
+            id              TEXT PRIMARY KEY,
+            title           TEXT,
+            company         TEXT,
+            location        TEXT,
+            url             TEXT,
+            status          TEXT DEFAULT 'pending',
+            stage           TEXT DEFAULT 'pending',
+            notes           TEXT,
+            tailored_resume TEXT,
+            recruiter       TEXT,
+            found_at        DATETIME DEFAULT CURRENT_TIMESTAMP,
+            applied_at      DATETIME
         )
     """)
+    # Add columns if upgrading from older schema
+    for col, definition in [
+        ("stage",           "TEXT DEFAULT 'pending'"),
+        ("notes",           "TEXT"),
+        ("tailored_resume", "TEXT"),
+        ("recruiter",       "TEXT"),
+    ]:
+        try:
+            conn.execute(f"ALTER TABLE jobs ADD COLUMN {col} {definition}")
+        except Exception:
+            pass
     conn.commit()
     conn.close()
 
@@ -74,10 +89,18 @@ def save_job(job):
 
 def update_job_status(job_id, status):
     conn = sqlite3.connect(DB_PATH)
-    conn.execute(
-        "UPDATE jobs SET status=?, applied_at=? WHERE id=?",
-        (status, datetime.now().isoformat(), job_id)
-    )
+    # Only advance stage to 'applied' on confirmed success
+    # For failed/skipped/approved, keep stage as-is so tracker stays clean
+    if status == "applied":
+        conn.execute(
+            "UPDATE jobs SET status=?, stage=?, applied_at=? WHERE id=?",
+            (status, "applied", datetime.now().isoformat(), job_id)
+        )
+    else:
+        conn.execute(
+            "UPDATE jobs SET status=?, applied_at=? WHERE id=?",
+            (status, datetime.now().isoformat(), job_id)
+        )
     conn.commit()
     conn.close()
 
@@ -515,12 +538,17 @@ async def apply_approved():
                     recruiter = await find_and_connect_recruiter(page, job)
                     if recruiter:
                         conn = sqlite3.connect(DB_PATH)
-                        conn.execute("UPDATE jobs SET recruiter=? WHERE id=?", (recruiter, job["id"]))
+                        conn.execute(
+                            "UPDATE jobs SET recruiter=? WHERE id=?",
+                            (recruiter, job["id"])
+                        )
                         conn.commit()
                         conn.close()
                         send_telegram(f"🤝 Connection request sent to recruiter at *{job['company']}*")
                 except Exception as e:
                     print(f"  Recruiter outreach error: {e}")
+            else:
+                send_telegram(f"⚠️ Could not apply to *{job['title']}* at {job['company']} — Easy Apply form needs manual review.")
 
             await asyncio.sleep(5)
 
