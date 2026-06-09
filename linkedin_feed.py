@@ -316,8 +316,15 @@ async def scrape_feed_posts(page):
             except Exception:
                 continue
 
-        # Collect any direct activity links
+        # Collect activity URNs from data-urn attributes (more reliable than href)
         activity_map = {}
+        urn_els = await page.query_selector_all("[data-urn*='activity']")
+        for el in urn_els:
+            urn = await el.get_attribute("data-urn") or ""
+            m   = re.search(r'activity:(\d+)', urn)
+            if m:
+                activity_map[m.group(1)] = f"https://www.linkedin.com/feed/update/urn:li:activity:{m.group(1)}/"
+        # Also check href links as fallback
         for lnk in all_links:
             try:
                 href = await lnk.get_attribute("href") or ""
@@ -331,12 +338,11 @@ async def scrape_feed_posts(page):
         body_text = await page.inner_text("body")
         new_posts = parse_posts_from_body(body_text, profile_map)
 
-        # Attach any activity links we found
-        for post in new_posts:
-            if activity_map:
-                first_url = next(iter(activity_map.values()))
-                if not post["post_url"]:
-                    post["post_url"] = first_url
+        # Attach activity URLs — assign sequentially to posts in order found
+        url_list = list(activity_map.values())
+        for i, post in enumerate(new_posts):
+            if not post["post_url"] and i < len(url_list):
+                post["post_url"] = url_list[i]
 
         for post in new_posts:
             if post["id"] not in seen_ids:
@@ -350,8 +356,9 @@ async def scrape_feed_posts(page):
 
 async def resolve_post_url(page, post):
     """
-    If post has no URL, navigate to the author's activity page
-    and find their most recent post permalink.
+    Get the direct permalink for a post.
+    Uses data-urn attributes on the author's activity page — these are always
+    present even when LinkedIn obfuscates class names and hides href links.
     """
     if post.get("post_url"):
         return post["post_url"]
@@ -361,12 +368,23 @@ async def resolve_post_url(page, post):
         activity_url = post["author_url"].rstrip("/") + "/recent-activity/all/"
         await page.goto(activity_url, wait_until="domcontentloaded")
         await page.wait_for_timeout(4000)
-        for lnk in await page.query_selector_all("a"):
-            href = await lnk.get_attribute("href") or ""
-            if "/feed/update/urn" in href:
-                return "https://www.linkedin.com" + href.split("?")[0] if href.startswith("/") else href.split("?")[0]
-    except Exception:
-        pass
+
+        # data-urn attributes contain activity IDs even with obfuscated class names
+        urns = await page.evaluate("""() => {
+            const els = document.querySelectorAll('[data-urn*="activity"]');
+            return Array.from(els).map(el => el.getAttribute('data-urn')).filter(Boolean);
+        }""")
+
+        if urns:
+            # Try to match the right post by checking body text order
+            # Default to the most recent (first) post
+            first_urn = urns[0]
+            match = re.search(r'activity:(\d+)', first_urn)
+            if match:
+                return f"https://www.linkedin.com/feed/update/urn:li:activity:{match.group(1)}/"
+
+    except Exception as e:
+        print(f"  resolve_post_url error: {e}")
     return None
 
 
