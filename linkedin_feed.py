@@ -188,7 +188,9 @@ Return ONLY the comment text."""
 async def load_session(context):
     if SESSION_FILE.exists():
         try:
-            cookies = json.loads(SESSION_FILE.read_text())
+            data = json.loads(SESSION_FILE.read_text())
+            # Support both raw cookies array and Playwright storage_state format
+            cookies = data["cookies"] if isinstance(data, dict) else data
             await context.add_cookies(cookies)
             return True
         except Exception:
@@ -196,80 +198,138 @@ async def load_session(context):
     return False
 
 
+SEARCH_QUERIES = [
+    ".NET Core AWS microservices cloud",
+    "Kubernetes DevOps Terraform engineering",
+    "software engineer career growth fintech",
+    "Apache Kafka event-driven architecture",
+    "machine learning AI cloud native",
+]
+
+
+def parse_posts_from_body(body_text, profile_map):
+    """
+    Parse LinkedIn search results body text into post dicts.
+    LinkedIn renders post sections separated by 'Feed post' headings.
+    profile_map: dict of author_name → profile_url collected from <a href='/in/...'>
+    """
+    posts = []
+    sections = body_text.split("Feed post")
+    for section in sections[1:]:
+        lines = [l.strip() for l in section.strip().split("\n") if l.strip()]
+        if not lines:
+            continue
+        author_name = lines[0]
+
+        # Skip LinkedIn system/company noise
+        if any(x in author_name.lower() for x in ["linkedin", "promoted", "suggested"]):
+            continue
+
+        # Find where post text starts: after the "time • " or "Follow"/"Connect" line
+        text_start = 2
+        for i, line in enumerate(lines[:8]):
+            if "•" in line or line in ("Follow", "Connect", "Following", "Message"):
+                text_start = i + 1
+                break
+
+        # Collect post text until engagement markers
+        stop_words = {"Like", "Comment", "Repost", "Send", "reactions", "comments", "reposts"}
+        text_lines = []
+        for line in lines[text_start:]:
+            if line in stop_words or re.match(r'^\d+\s*(reaction|comment|repost)', line, re.I):
+                break
+            if line in ("…more", "… more", "Show more"):
+                break
+            text_lines.append(line)
+
+        post_text = " ".join(text_lines).strip()
+        if not post_text or len(post_text) < 60:
+            continue
+
+        # Use author name to look up profile URL
+        author_url = ""
+        for name_key, url in profile_map.items():
+            if author_name.lower() in name_key.lower() or name_key.lower() in author_name.lower():
+                author_url = url
+                break
+
+        # Create a stable ID from author + text hash
+        post_id = str(abs(hash(author_name + post_text[:100])))[:15]
+
+        if already_seen_post(post_id):
+            continue
+
+        posts.append({
+            "id":          post_id,
+            "author_name": author_name,
+            "author_url":  author_url,
+            "post_text":   post_text,
+            "post_url":    "",  # filled in when we find activity link
+        })
+
+    return posts
+
+
 async def scrape_feed_posts(page):
-    """Scroll through LinkedIn feed and extract posts."""
-    await page.goto("https://www.linkedin.com/feed/", wait_until="domcontentloaded")
-    await page.wait_for_timeout(3000)
-
-    # Scroll to load more posts
-    for _ in range(4):
-        await page.evaluate("window.scrollBy(0, 800)")
-        await page.wait_for_timeout(1500)
-
+    """Search LinkedIn for relevant posts and parse results."""
     posts     = []
     seen_ids  = set()
 
-    # Find all post containers (try both old and new LinkedIn markup)
-    containers = await page.query_selector_all(
-        "div.feed-shared-update-v2, div[data-urn*='activity']"
-    )
+    for query in SEARCH_QUERIES:
+        url = (
+            f"https://www.linkedin.com/search/results/content/"
+            f"?keywords={query.replace(' ', '%20')}"
+            f"&datePosted=%22past-week%22"
+        )
+        await page.goto(url, wait_until="domcontentloaded")
+        await page.wait_for_timeout(4000)
 
-    for container in containers[:40]:
-        try:
-            # Extract activity ID from data-urn or a permalink link
-            urn   = await container.get_attribute("data-urn") or ""
-            match = re.search(r'activity:(\d+)', urn)
+        # Scroll to load more results
+        for _ in range(5):
+            await page.evaluate("window.scrollBy(0, 800)")
+            await page.wait_for_timeout(1200)
 
-            if not match:
-                permalink = await container.query_selector("a[href*='feed/update/urn']")
-                if permalink:
-                    href  = await permalink.get_attribute("href") or ""
-                    match = re.search(r'activity:(\d+)', href)
-
-            if not match:
+        # Collect profile URLs from anchor tags
+        profile_map = {}
+        all_links = await page.query_selector_all("a")
+        for lnk in all_links:
+            try:
+                href = await lnk.get_attribute("href") or ""
+                text = (await lnk.inner_text()).strip().split("\n")[0]
+                if "/in/" in href and text and len(text) > 2:
+                    full = href if href.startswith("http") else f"https://www.linkedin.com{href}"
+                    profile_map[text] = full.split("?")[0]
+            except Exception:
                 continue
 
-            post_id = match.group(1)
-            if post_id in seen_ids or already_seen_post(post_id):
-                continue
-            seen_ids.add(post_id)
-
-            # Post text (try multiple selectors for resilience)
-            text_el = (
-                await container.query_selector(".feed-shared-update-v2__description .break-words") or
-                await container.query_selector(".update-components-text .break-words")            or
-                await container.query_selector(".feed-shared-update-v2__description")             or
-                await container.query_selector(".update-components-text")
-            )
-            post_text = (await text_el.inner_text()).strip() if text_el else ""
-            if not post_text or len(post_text) < 50:
+        # Collect any direct activity links
+        activity_map = {}
+        for lnk in all_links:
+            try:
+                href = await lnk.get_attribute("href") or ""
+                if "/feed/update/urn" in href:
+                    m = re.search(r'activity:(\d+)', href)
+                    if m:
+                        activity_map[m.group(1)] = href.split("?")[0]
+            except Exception:
                 continue
 
-            # Author name + profile URL
-            author_link = (
-                await container.query_selector(".update-components-actor__meta-link") or
-                await container.query_selector("a.update-components-actor__name")     or
-                await container.query_selector(".feed-shared-actor__name-link")
-            )
-            author_name = "Unknown"
-            author_url  = ""
-            if author_link:
-                author_name = (await author_link.inner_text()).strip().split("\n")[0]
-                href        = await author_link.get_attribute("href") or ""
-                if href.startswith("/"):
-                    href = f"https://www.linkedin.com{href}"
-                author_url = href.split("?")[0]
+        body_text = await page.inner_text("body")
+        new_posts = parse_posts_from_body(body_text, profile_map)
 
-            posts.append({
-                "id":          post_id,
-                "author_name": author_name,
-                "author_url":  author_url,
-                "post_text":   post_text,
-                "post_url":    f"https://www.linkedin.com/feed/update/urn:li:activity:{post_id}/",
-            })
+        # Attach any activity links we found
+        for post in new_posts:
+            if activity_map:
+                first_url = next(iter(activity_map.values()))
+                if not post["post_url"]:
+                    post["post_url"] = first_url
 
-        except Exception:
-            continue
+        for post in new_posts:
+            if post["id"] not in seen_ids:
+                seen_ids.add(post["id"])
+                posts.append(post)
+
+        await asyncio.sleep(2)
 
     return posts
 
@@ -489,15 +549,15 @@ async def scan_feed():
         page = await context.new_page()
         await load_session(context)
 
+        # Quick session check
         await page.goto("https://www.linkedin.com/feed/", wait_until="domcontentloaded")
-        await page.wait_for_timeout(2000)
-
+        await page.wait_for_timeout(3000)
         if "login" in page.url or "authwall" in page.url:
             send_telegram("⚠️ LinkedIn session expired — re-login needed.", topic="chat")
             await browser.close()
             return
 
-        print("Scraping LinkedIn feed...")
+        print("Searching LinkedIn for relevant posts...")
         posts = await scrape_feed_posts(page)
         await browser.close()
 
