@@ -59,8 +59,8 @@ def generate_post_with_claude(topic):
         max_tokens=512,
         messages=[{
             "role": "user",
-            "content": f"""Write a professional LinkedIn post for Akshay M, a software developer
-specializing in AWS, DevOps, and Python. The post should be about: {topic}
+            "content": f"""Write a professional LinkedIn post for Nikhil Musinipally, an aspiring data analyst
+specializing in SQL, Python, Power BI, and data visualization. The post should be about: {topic}
 
 Guidelines:
 - 150-200 words max

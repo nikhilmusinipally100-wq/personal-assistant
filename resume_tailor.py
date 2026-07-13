@@ -17,43 +17,35 @@ config        = dotenv_values(Path.home() / ".env")
 ANTHROPIC_KEY = config.get("ANTHROPIC_API_KEY")
 
 RESUME = """
-Akshay Mittapally | akshayreddy2022@gmail.com | +1 (913) 940 6869 | Irvine, CA
+Nikhil Musinipally | nikhil.musinipally.100@gmail.com | +44 7448863585 | London, UK
 
-EXPERIENCE
-
-Software Engineer — Luxoft USA Inc., California (Mar 2025 – Present)
-• Developed microservices for Capital Group's CRD platform using .NET Core and Apache Kafka
-• Built CI/CD pipelines with Harness, Docker, and Kubernetes (EKS) on AWS
-• Integrated Datadog and Splunk for monitoring and alerting across distributed services
-• Automated infrastructure provisioning using Terraform reducing deployment time by 40%
-
-Software Engineer — Elevance Health (Aug 2024 – Feb 2025, Contract)
-• Built HIPAA-compliant patient management system covering records, scheduling, and billing using ASP.NET Core and Angular
-• Deployed Web APIs on AWS Elastic Beanstalk integrated with RDS (SQL Server), S3, and Cognito
-• Implemented role-based access control and HIPAA-compliant authorization via AWS Cognito and .NET identity management
-• Automated deployment pipelines via AWS CodePipeline; containerized services with Docker
-
-Full Stack .NET Developer — Delta Air Lines (Feb 2024 – May 2024, Internship)
-• Built passenger reservation system handling booking, seat selection, and payment flows using React, TypeScript
-• Integrated Amadeus GDS API for real-time flight data, Stripe and PayPal for payments, AWS Cognito/OAuth2 for auth
-• Improved performance using ElastiCache (Redis); automated deployments via AWS CodePipeline and CloudFormation
-
-Software Engineer — Cognizant (Feb 2022 – Dec 2022)
-• Developed enterprise web applications using ASP.NET MVC and Web API with SQL Server
-• Collaborated in Agile/Scrum teams delivering bi-weekly sprints
+PROFILE
+Aspiring Data Analyst with an MSc in Management with Data Analytics (in progress) and a
+B-Tech in Electrical & Electronics Engineering. Skilled in SQL, Python, Excel, and BI tools
+(Power BI, Tableau) for cleaning, analysing, and visualising data. Strong numerical accuracy
+and communication developed through customer-facing retail and hospitality roles. Seeking
+Data Analyst / Business Analyst roles (also open to software development).
 
 EDUCATION
-MS Computer Science — University of Central Missouri (2023–2024), GPA 3.5
+MSc Management with Data Analytics — BPP University, London (2025–2027)
+B-Tech Electrical & Electronics Engineering — TKR College of Engineering & Technology, Hyderabad (2018–2022)
 
-SKILLS
-Backend: ASP.NET Core, .NET, C#, RESTful APIs, Microservices
-Frontend: React, Angular, TypeScript
-Cloud: AWS (EC2, RDS, S3, EKS, Lambda, Elastic Beanstalk, Cognito, CodePipeline)
-DevOps: Docker, Kubernetes, Terraform, Harness, CI/CD
-Messaging: Apache Kafka
-Monitoring: Datadog, Splunk
-Databases: SQL Server, ElastiCache (Redis)
-Other: Python, OAuth2, HIPAA compliance, Agile/Scrum
+TECHNICAL SKILLS
+Data: SQL, Python (Pandas, NumPy), advanced Excel, data cleaning, statistics
+Visualization / BI: Power BI, Tableau, dashboards & reporting
+Concepts: exploratory data analysis, KPI reporting, foundations of machine learning
+
+EXPERIENCE
+Sales Assistant & Post Office Clerk — Morrisons, UK (Jun 2025 – Present)
+• Handled high volumes of cash/card transactions and balanced tills daily with full accuracy
+• Processed postal, parcel, and bill-payment services efficiently, reducing customer wait times
+Store Assistant — Reliance Retail, India (2022)
+• Monitored stock levels and organised inventory/deliveries; flagged reorder needs proactively
+
+CERTIFICATES
+Food Safety & Hygiene for Catering (Level 2) | IELTS 6.5 | GRE 316
+
+# TODO: Replace/expand this with your full professional data CV and any data projects when ready.
 """
 
 
@@ -102,14 +94,14 @@ def tailor_resume_with_claude(job_title, company, job_description):
     """Ask Claude to rewrite resume bullets to match the job."""
     client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
 
-    prompt = f"""You are a professional resume writer. Tailor Akshay's resume for this specific job.
+    prompt = f"""You are a professional resume writer. Tailor Nikhil's resume for this specific job.
 
 JOB: {job_title} at {company}
 
 JOB DESCRIPTION:
 {job_description if job_description else "No description available — tailor based on job title."}
 
-AKSHAY'S CURRENT RESUME:
+NIKHIL'S CURRENT RESUME:
 {RESUME}
 
 INSTRUCTIONS:
@@ -141,7 +133,7 @@ if __name__ == "__main__":
     import sys
     # Quick test
     job = {
-        "title": sys.argv[1] if len(sys.argv) > 1 else "Software Developer .NET",
+        "title": sys.argv[1] if len(sys.argv) > 1 else "Data Analyst",
         "company": sys.argv[2] if len(sys.argv) > 2 else "Test Company",
         "url": sys.argv[3] if len(sys.argv) > 3 else ""
     }

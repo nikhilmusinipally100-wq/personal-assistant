@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Bunty — Akshay's personal AI assistant Telegram bot.
+Mahi — Nikhil's personal AI assistant Telegram bot.
 Runs continuously, responds to messages via Claude, and accepts commands.
 """
 
@@ -22,10 +22,10 @@ import subprocess
 # Runtime paths — resolved dynamically so the repo works on any machine
 BASE       = Path(__file__).parent
 PYTHON     = sys.executable
-STOCKS_DIR = Path.home() / "Akshay" / "stockspredictor"
+STOCKS_DIR = Path.home() / "Nikhil" / "stockspredictor"
 
 # Prevent duplicate instances
-PIDFILE = Path("/tmp/akshay_bot.pid")
+PIDFILE = Path("/tmp/nikhil_bot.pid")
 if PIDFILE.exists():
     old_pid = int(PIDFILE.read_text().strip())
     try:
@@ -50,69 +50,53 @@ TELEGRAM_API   = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 # Conversation history for context (last 20 messages)
 conversation_history = []
 
-SYSTEM_PROMPT = """You are Bunty, Akshay Mittapally's personal AI assistant. Here's everything you know about him:
+SYSTEM_PROMPT = """You are Mahi, Nikhil Musinipally's personal AI assistant. Here's everything you know about him:
 
 PERSONAL:
-- Full name: Akshay Mittapally (LinkedIn: Akshay M, He/Him)
-- Email: akshayreddy2022@gmail.com | Phone: +1 (913) 940 6869
-- Location: United States (California area)
-- Education: MS Computer Science, University of Central Missouri (Jan 2023 – May 2024)
-- LinkedIn connections: 500+, followers: 1,454
+- Full name: Nikhil Musinipally (He/Him)
+- Email: nikhil.musinipally.100@gmail.com | Phone: +44 7448863585
+- Location: London, United Kingdom
+- Education: MSc Management with Data Analytics, BPP University, London (2025–2027);
+  B-Tech Electrical & Electronics Engineering, TKR College of Engineering and Technology, Hyderabad (2018–2022)
 
-WORK SCHEDULE (Mon-Fri, PST):
-- 8:00am: Wake up & morning routine
-- 8:30am: Daily standup
-- 9:00am–12:00pm: Work
-- 12:00–1:00pm: Lunch
-- 1:00–5:00pm: Work
-- 5:00–5:30pm: Commute home
-- 5:30–7:00pm: Gym
-- 7:00–8:30pm: Learn / relax
-- 8:30–9:15pm: Dinner
-- 9:15–10:00pm: Wind down
+CAREER GOAL:
+- Actively job-hunting — aiming to land a role within the next few weeks
+- PRIMARY focus: Data roles — Data Analyst, Business Analyst, Data Scientist, Data Engineer
+- SECONDARY focus: Software Development roles
+- Based in London/UK; open to hybrid and remote
 
-CURRENT JOB:
-- Company: Luxoft USA Inc., California (March 2025 - Present, ~1.4 yrs)
-- Role: Software Engineer (hybrid)
-- Project: Capital Group's CRD (Charles River Development) platform — portfolio & risk management
-- Key work: event-driven microservices with Kafka, Kubernetes (EKS) deployments, Terraform IaC, Harness CI/CD with blue-green deployments, Datadog/Splunk observability, AWS migration of legacy on-prem apps
-- Tech: .NET Core, Apache Kafka, Docker, Kubernetes (EKS), Terraform, Harness, Datadog, Splunk, AWS
+DATA SKILLS (building toward a data career):
+- SQL, Python (Pandas, NumPy), advanced Excel
+- Data visualization & BI: Power BI, Tableau
+- Data cleaning, exploratory analysis, statistics, dashboards & reporting
+- Foundations of machine learning
 
-PREVIOUS EXPERIENCE:
-- Elevance Health (Aug 2024 – Feb 2025, contract, 7 mos): Patient management system, ASP.NET Core, Angular/TypeScript, AWS Elastic Beanstalk, RDS, Cognito, Docker, HIPAA compliance
-- Delta Air Lines (Feb 2024 – May 2024, internship, 4 mos, remote): Passenger reservation system, React, TypeScript, Amadeus GDS API, Stripe, PayPal, AWS Cognito/OAuth2, ElastiCache, CodePipeline
-- University of Central Missouri research (Jan 2023 – May 2024):
-  * Financial News Sentiment Analyzer: FinBERT fine-tuned on 15k+ samples, 87% accuracy, FastAPI REST endpoint
-  * Patient Readmission Risk Predictor: XGBoost (best AUC-ROC 0.82), SHAP explainability, SMOTE for class imbalance
-- Cognizant (Feb 2022 – Dec 2022): ASP.NET MVC, Web API, SQL Server, Agile sprints
+CURRENT & RECENT EXPERIENCE:
+- Sales Assistant & Post Office Clerk — Morrisons, UK (Jun 2025 – Present): customer service, cash/till handling, transaction reconciliation, postal & counter operations
+- Waiter & General Assistant — Work Force Resourcing, UK (Apr–Jul 2025): high-pressure event service, cash handling
+- Store Assistant — Reliance Retail, India (2022): stock monitoring, inventory & delivery organization
+- Front of House — Haritha Hotel, India (2021): hospitality, customer care
 
-TECHNICAL SKILLS:
-- Backend: ASP.NET Core, .NET, C#, RESTful APIs, Microservices, FastAPI (Python)
-- Frontend: React, Angular, TypeScript
-- Cloud: AWS (EC2, RDS, S3, EKS, Lambda, Elastic Beanstalk, Cognito, CodePipeline, CloudFormation)
-- DevOps: Docker, Kubernetes, Terraform, Harness CI/CD, IaC, blue-green deployments
-- Messaging: Apache Kafka (event-driven, async inter-service communication)
-- Monitoring: Datadog, Splunk
-- ML/AI: FinBERT, XGBoost, Scikit-learn, SHAP, SMOTE, Hugging Face Transformers, Pandas, NLTK, Matplotlib
-- Databases: SQL Server, ElastiCache (Redis), SQLite
-- Other: Python, OAuth2, Amadeus GDS API, HIPAA compliance, Agile/Scrum
+TRANSFERABLE STRENGTHS:
+- Strong with numbers, accuracy & reconciliation (till balancing, stock tracking)
+- Excellent customer service and communication
+- Multitasking under pressure; adaptable; multilingual; strong team player
 
-LINKEDIN ABOUT (his own words):
-"I build high-performance, cloud-native systems that handle real-world complexity — from real-time trade processing on financial platforms to HIPAA-compliant patient management and live flight booking engines. My core stack is .NET Core and microservices architecture, backed by AWS, Apache Kafka, Docker, and Kubernetes. I focus on fault-tolerant event streaming, low-latency APIs, infrastructure as code, and observable systems. Open to senior .NET/cloud engineering roles in fintech, healthtech, or AI-integrated platforms."
+CERTIFICATES & TESTS:
+- Food Safety and Hygiene for Catering (Level 2)
+- IELTS 6.5 | GRE 316
 
 PROJECTS:
-- stockspredictor: Python CLI that monitors S&P 500 stocks for abnormal drops using yfinance + SQLite
 - personal-assistant: This bot! Gmail + Calendar + LinkedIn + Telegram + Claude AI
 
 GOALS & INTERESTS:
-- Open to senior .NET/cloud/DevOps roles in fintech, healthtech, or AI platforms
-- AWS certification pursuit
-- Stock market monitoring and automation
+- Break into a data career (Data/Business Analyst → Data Scientist/Engineer)
+- Keep sharpening SQL, Python, Power BI, and Tableau
+- Build a strong CV, portfolio, and interview readiness for data roles
 - Building personal AI/automation tools
-- Career growth to senior/lead cloud-native engineering roles
 
 Be concise, friendly, and helpful. Keep responses short — this is Telegram, not an essay.
-Use emojis occasionally. Help with coding, AWS/DevOps advice, career questions, scheduling, and anything else he needs."""
+Use emojis occasionally. Help with his data-career job search, learning SQL/Python/Power BI/Tableau, CV and interview prep, scheduling, and anything else he needs."""
 
 
 def send_message(text, parse_mode="Markdown", thread_id=None):
@@ -144,18 +128,17 @@ def get_updates(offset=None):
 
 
 def is_authorized(msg):
-    """Accept messages from the group or the personal chat."""
+    """Accept messages ONLY from the configured group or the personal chat."""
     chat = msg.get("chat", {})
-    chat_id   = str(chat.get("id", ""))
-    chat_type = chat.get("type", "")
+    chat_id = str(chat.get("id", ""))
     from telegram_topics import GROUP_ID
-    return chat_id == TELEGRAM_CHAT or chat_id == str(GROUP_ID) or chat_type in ("group", "supergroup")
+    return chat_id == str(TELEGRAM_CHAT) or chat_id == str(GROUP_ID)
 
 
 TOOLS = [
     {
         "name": "create_calendar_event",
-        "description": "Create a Google Calendar event for Akshay. If attendee emails are provided, send them a Google Meet invite. Always add a Google Meet link when scheduling a meeting with other people.",
+        "description": "Create a Google Calendar event for Nikhil. If attendee emails are provided, send them a Google Meet invite. Always add a Google Meet link when scheduling a meeting with other people.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -172,7 +155,7 @@ TOOLS = [
     },
     {
         "name": "list_calendar_events",
-        "description": "List Akshay's upcoming calendar events.",
+        "description": "List Nikhil's upcoming calendar events.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -194,7 +177,7 @@ TOOLS = [
     },
     {
         "name": "get_job_applications",
-        "description": "Get Akshay's job application pipeline from the database.",
+        "description": "Get Nikhil's job application pipeline from the database.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -204,7 +187,7 @@ TOOLS = [
     },
     {
         "name": "fetch_emails",
-        "description": "Fetch and summarize Akshay's recent Gmail emails.",
+        "description": "Fetch and summarize Nikhil's recent Gmail emails.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -214,12 +197,12 @@ TOOLS = [
     },
     {
         "name": "check_stocks",
-        "description": "Trigger a stock drop check for Akshay's watchlist.",
+        "description": "Trigger a stock drop check for Nikhil's watchlist.",
         "input_schema": {"type": "object", "properties": {}}
     },
     {
         "name": "add_stock",
-        "description": "Add a stock ticker to Akshay's watchlist.",
+        "description": "Add a stock ticker to Nikhil's watchlist.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -230,7 +213,7 @@ TOOLS = [
     },
     {
         "name": "remove_stock",
-        "description": "Remove a stock ticker from Akshay's watchlist.",
+        "description": "Remove a stock ticker from Nikhil's watchlist.",
         "input_schema": {
             "type": "object",
             "properties": {
@@ -241,12 +224,12 @@ TOOLS = [
     },
     {
         "name": "list_stocks",
-        "description": "List all stocks currently in Akshay's watchlist.",
+        "description": "List all stocks currently in Nikhil's watchlist.",
         "input_schema": {"type": "object", "properties": {}}
     },
     {
         "name": "search_jobs",
-        "description": "Search LinkedIn for new Easy Apply jobs matching Akshay's profile.",
+        "description": "Search LinkedIn for new Easy Apply jobs matching Nikhil's profile.",
         "input_schema": {"type": "object", "properties": {}}
     }
 ]
@@ -264,8 +247,8 @@ def execute_tool(name, params):
             add_meet = params.get("add_meet", bool(attendees))
             event = {
                 "summary": params["title"],
-                "start": {"dateTime": f"{date}T{params['start_time']}:00", "timeZone": "America/Los_Angeles"},
-                "end":   {"dateTime": f"{date}T{params['end_time']}:00",   "timeZone": "America/Los_Angeles"},
+                "start": {"dateTime": f"{date}T{params['start_time']}:00", "timeZone": "Europe/London"},
+                "end":   {"dateTime": f"{date}T{params['end_time']}:00",   "timeZone": "Europe/London"},
             }
             if params.get("location"):
                 event["location"] = params["location"]
@@ -380,13 +363,25 @@ def execute_tool(name, params):
         return f"Tool error ({name}): {e}"
 
 
+def _trim_history(hist, max_len=20):
+    """Trim to the last max_len messages, but snap the start to a genuine user
+    text turn so we never orphan a tool_result or start on an assistant turn
+    (both cause Messages API 400s)."""
+    if len(hist) <= max_len:
+        return hist
+    trimmed = hist[-max_len:]
+    while trimmed and not (trimmed[0].get("role") == "user"
+                           and isinstance(trimmed[0].get("content"), str)):
+        trimmed = trimmed[1:]
+    return trimmed
+
+
 def ask_claude(user_message):
     """Send message to Claude with tool use support — agentic loop."""
     global conversation_history
 
     conversation_history.append({"role": "user", "content": user_message})
-    if len(conversation_history) > 20:
-        conversation_history = conversation_history[-20:]
+    conversation_history = _trim_history(conversation_history)
 
     client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
 
@@ -424,7 +419,7 @@ def handle_command(text):
     cmd = text.lower().strip()
 
     if cmd == "/start":
-        return "👋 Hey Akshay! I'm Bunty, your personal assistant. Ask me anything or use:\n\n/schedule — today's calendar\n/emails — check recent emails\n/help — show all commands"
+        return "👋 Hey Nikhil! I'm Mahi, your personal assistant. Ask me anything or use:\n\n/schedule — today's calendar\n/emails — check recent emails\n/help — show all commands"
 
     if cmd == "/schedule":
         summary = get_calendar_summary()
@@ -558,7 +553,7 @@ def handle_command(text):
 
 def run():
     print(f"[{datetime.now().strftime('%H:%M')}] Bot server started. Listening for messages...")
-    send_message("🤖 Bunty is online! Type anything to chat, or use /help to see commands.")
+    send_message("🤖 Mahi is online! Type anything to chat, or use /help to see commands.")
 
     offset = None
     while True:

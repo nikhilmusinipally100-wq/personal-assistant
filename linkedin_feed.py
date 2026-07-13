@@ -184,7 +184,7 @@ def generate_comment(post):
         messages=[{
             "role": "user",
             "content": f"""Write a short, genuine LinkedIn comment (2-3 sentences) for this post.
-The commenter is Akshay, a software engineer with expertise in .NET Core, AWS, Kafka, and Kubernetes.
+The commenter is Nikhil, an aspiring data analyst learning SQL, Python, Power BI, Tableau, and machine learning.
 Be specific to the post content. Add real value or a relevant insight. Sound human.
 Do NOT start with "Great post!" or "Excellent!" — be direct and thoughtful.
 
@@ -213,11 +213,11 @@ async def load_session(context):
 
 
 SEARCH_QUERIES = [
-    ".NET Core AWS microservices cloud",
-    "Kubernetes DevOps Terraform engineering",
-    "software engineer career growth fintech",
-    "Apache Kafka event-driven architecture",
-    "machine learning AI cloud native",
+    "data analytics SQL Python",
+    "data science machine learning",
+    "Power BI Tableau dashboards",
+    "data engineering pipelines",
+    "data analyst career growth",
 ]
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 LinkedIn Easy Apply Bot
-- Finds Easy Apply jobs matching Akshay's profile
+- Finds Easy Apply jobs matching Nikhil's data-career profile
 - Sends job details to Telegram for approval
 - Applies to approved jobs automatically
 """
@@ -22,19 +22,20 @@ TELEGRAM_TOKEN = config.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT  = config.get("TELEGRAM_CHAT_ID")
 TELEGRAM_API   = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 
-# Job search keywords matching Akshay's profile
+# Job search keywords matching Nikhil's data-career profile
 JOB_KEYWORDS = [
-    "Software Developer .NET",
-    "ASP.NET Core Developer",
-    "Full Stack Developer .NET",
-    "Software Engineer AWS",
-    ".NET Developer AWS",
+    "Data Analyst",
+    "Business Analyst",
+    "Data Scientist",
+    "Data Engineer",
+    "Analytics",
+    "Software Developer",
 ]
 
 LINKEDIN_EMAIL    = config.get("LINKEDIN_EMAIL")
 LINKEDIN_PASSWORD = config.get("LINKEDIN_PASSWORD")
 
-LOCATION     = "Irvine, CA"
+LOCATION     = "London, United Kingdom"
 DB_PATH      = Path(__file__).parent / "applied_jobs.db"
 SESSION_FILE = Path(__file__).parent / "linkedin_session.json"
 
@@ -431,7 +432,7 @@ async def find_and_connect_recruiter(page, job):
                         note_text = (
                             f"Hi {name.split()[0]}, I recently applied for the "
                             f"{job['title']} role at {job['company']}. "
-                            f"I'm a software developer with experience in .NET Core, AWS, and DevOps. "
+                            f"I'm an aspiring data analyst skilled in SQL, Python, Power BI, and Tableau. "
                             f"Would love to connect!"
                         )
                         await note_field.fill(note_text[:300])

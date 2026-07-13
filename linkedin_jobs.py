@@ -55,8 +55,9 @@ def fetch_linkedin_job_emails(hours=24):
         subject = subject_raw.decode(enc or "utf-8") if isinstance(subject_raw, bytes) else (subject_raw or "")
 
         # Only job alert emails
-        job_keywords = ["developer", "engineer", "architect", "devops", "aws", "python",
-                        "software", ".net", "full stack", "backend", "cloud", "job"]
+        job_keywords = ["data analyst", "data scientist", "business analyst", "data engineer",
+                        "analytics", "data", "sql", "python", "power bi", "tableau",
+                        "developer", "software", "job"]
         if not any(k in subject.lower() for k in job_keywords):
             continue
 
@@ -95,7 +96,7 @@ def summarize_jobs(jobs):
         max_tokens=1024,
         messages=[{
             "role": "user",
-            "content": f"""You are a job search assistant for Akshay, a software developer.
+            "content": f"""You are a job search assistant for Nikhil, targeting data roles (Data Analyst, Business Analyst, Data Scientist, Data Engineer) and secondarily software development.
 Extract and summarize the job opportunities from these LinkedIn alert emails.
 For each job mention: Job title, Company, Location, Salary (if mentioned), and a one-line summary.
 Group similar roles together. Highlight any remote or high-paying roles.

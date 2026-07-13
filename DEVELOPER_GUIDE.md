@@ -1,4 +1,4 @@
-# Developer Guide — Personal AI Assistant (Bunty)
+# Developer Guide — Personal AI Assistant (Mahi)
 
 A 24/7 personal Telegram bot powered by Claude AI. Handles Gmail, Google Calendar, LinkedIn Easy Apply, job tracking, stock alerts, and more.
 
@@ -40,7 +40,7 @@ python3 --version   # should print Python 3.11.x
 ## 2. Clone & Install
 
 ```bash
-git clone https://github.com/AkshayMittapally/personal-assistant.git email_assistant
+git clone https://github.com/nikhilmusinipally100-wq/personal-assistant.git email_assistant
 cd email_assistant
 
 pip3 install -r requirements.txt
@@ -184,8 +184,8 @@ The LaunchAgent keeps the bot alive across reboots and screen locks using `caffe
 **Step 1 — Create the plist file:**
 
 ```bash
-cp ~/email_assistant/com.akshay.assistant.plist.example \
-   ~/Library/LaunchAgents/com.akshay.assistant.plist
+cp ~/email_assistant/com.nikhil.assistant.plist.example \
+   ~/Library/LaunchAgents/com.nikhil.assistant.plist
 ```
 
 **Step 2 — Edit the plist and replace `YOUR_USERNAME` with your macOS username:**
@@ -198,14 +198,14 @@ whoami
 which python3
 ```
 
-Open `~/Library/LaunchAgents/com.akshay.assistant.plist` and update:
+Open `~/Library/LaunchAgents/com.nikhil.assistant.plist` and update:
 - `/Users/YOUR_USERNAME/` → your actual home directory path
 - Python path → output of `which python3`
 
 **Step 3 — Load the agent:**
 
 ```bash
-launchctl load ~/Library/LaunchAgents/com.akshay.assistant.plist
+launchctl load ~/Library/LaunchAgents/com.nikhil.assistant.plist
 ```
 
 **Step 4 — Verify it started:**
@@ -218,8 +218,8 @@ tail -f ~/email_assistant/assistant.log
 To stop/restart:
 
 ```bash
-launchctl unload ~/Library/LaunchAgents/com.akshay.assistant.plist
-launchctl load   ~/Library/LaunchAgents/com.akshay.assistant.plist
+launchctl unload ~/Library/LaunchAgents/com.nikhil.assistant.plist
+launchctl load   ~/Library/LaunchAgents/com.nikhil.assistant.plist
 ```
 
 ---
@@ -273,7 +273,7 @@ python3 bot_server.py
 **Start in background (production):**
 
 ```bash
-pkill -f bot_server.py; rm -f /tmp/akshay_bot.pid
+pkill -f bot_server.py; rm -f /tmp/nikhil_bot.pid
 cd ~/email_assistant
 nohup python3 bot_server.py > assistant.log 2>&1 &
 ```
@@ -289,7 +289,7 @@ tail -f ~/email_assistant/bot.log
 **Stop:**
 
 ```bash
-pkill -f bot_server.py && rm -f /tmp/akshay_bot.pid
+pkill -f bot_server.py && rm -f /tmp/nikhil_bot.pid
 ```
 
 ---
@@ -354,7 +354,7 @@ Send these in your Telegram group or in DM with the bot:
 **Bot won't start — "already running"**
 
 ```bash
-rm -f /tmp/akshay_bot.pid
+rm -f /tmp/nikhil_bot.pid
 python3 bot_server.py
 ```
 
@@ -364,7 +364,7 @@ Two instances are polling simultaneously. Kill all and restart cleanly:
 
 ```bash
 pkill -f bot_server.py
-rm -f /tmp/akshay_bot.pid
+rm -f /tmp/nikhil_bot.pid
 sleep 5
 nohup python3 bot_server.py > assistant.log 2>&1 &
 ```

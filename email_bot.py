@@ -17,7 +17,7 @@ from calendar_bot import get_calendar_summary
 # Load credentials from ~/.env
 config = dotenv_values(Path.home() / ".env")
 
-GMAIL_ADDRESS   = config.get("GMAIL_ADDRESS", "akshayreddy2022@gmail.com")
+GMAIL_ADDRESS   = config.get("GMAIL_ADDRESS", "nikhil.musinipally.100@gmail.com")
 GMAIL_APP_PASS  = config.get("GMAIL_APP_PASSWORD")
 ANTHROPIC_KEY   = config.get("ANTHROPIC_API_KEY")
 TELEGRAM_TOKEN  = config.get("TELEGRAM_BOT_TOKEN")

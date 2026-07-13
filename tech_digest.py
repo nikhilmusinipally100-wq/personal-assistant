@@ -16,23 +16,23 @@ config = dotenv_values(Path.home() / ".env")
 ANTHROPIC_KEY = config.get("ANTHROPIC_API_KEY")
 
 KEYWORDS = [
-    "aws", ".net", "c#", "kafka", "kubernetes", "terraform",
-    "microservices", "fintech", "devops", "docker", "cloud native",
-    "api", "distributed systems", "event-driven", "observability"
+    "data analytics", "data science", "sql", "python", "power bi", "tableau",
+    "machine learning", "data engineering", "pandas", "business intelligence",
+    "data visualization", "statistics", "analytics", "dashboard", "ai"
 ]
 
 RSS_FEEDS = [
-    ("AWS Blog",      "https://aws.amazon.com/blogs/aws/feed/"),
-    (".NET Blog",     "https://devblogs.microsoft.com/dotnet/feed/"),
-    ("Confluent",     "https://www.confluent.io/blog/feed/"),
-    ("InfoQ Cloud",   "https://feed.infoq.com/cloud/"),
-    ("Dev.to DevOps", "https://dev.to/feed/tag/devops"),
+    ("Towards Data Science", "https://towardsdatascience.com/feed"),
+    ("KDnuggets",            "https://www.kdnuggets.com/feed"),
+    ("Analytics Vidhya",     "https://www.analyticsvidhya.com/feed/"),
+    ("Dev.to Data Science",  "https://dev.to/feed/tag/datascience"),
+    ("Dev.to SQL",           "https://dev.to/feed/tag/sql"),
 ]
 
 
 def fetch_hn_articles(hours_back=24):
     """Fetch relevant HackerNews stories from the past 24h via Algolia API."""
-    query = "aws kubernetes kafka .net terraform microservices fintech"
+    query = "data science sql python machine learning analytics power bi"
     since = int((datetime.now(timezone.utc) - timedelta(hours=hours_back)).timestamp())
     url = (
         f"https://hn.algolia.com/api/v1/search"
@@ -106,9 +106,9 @@ def pick_and_summarize(articles):
         max_tokens=1200,
         messages=[{
             "role": "user",
-            "content": f"""You are a tech digest curator for Akshay Mittapally, a senior .NET/cloud engineer working with AWS, Kafka, Kubernetes, Terraform, and fintech systems.
+            "content": f"""You are a tech digest curator for Nikhil Musinipally, an aspiring data analyst / data scientist learning SQL, Python, Power BI, Tableau, and machine learning, and job-hunting for data roles (secondarily software development).
 
-From the articles below, pick the 5-7 MOST relevant and interesting ones for his profile. Skip generic beginner content, job postings, or off-topic articles.
+From the articles below, pick the 5-7 MOST relevant and interesting ones for his data-career goals. Skip off-topic articles and pure job postings, but keep beginner-to-intermediate data content since he is building his skills.
 
 For each selected article write ONE line:
 • [emoji] **Title** — one sentence on why it matters. [source]

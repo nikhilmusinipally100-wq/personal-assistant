@@ -96,9 +96,9 @@ python3 setup_calendar.py
 
 ```bash
 # Copy and edit the plist template
-cp com.akshay.assistant.plist.example ~/Library/LaunchAgents/com.akshay.assistant.plist
+cp com.nikhil.assistant.plist.example ~/Library/LaunchAgents/com.nikhil.assistant.plist
 # Edit paths inside the plist to match your username
-launchctl load ~/Library/LaunchAgents/com.akshay.assistant.plist
+launchctl load ~/Library/LaunchAgents/com.nikhil.assistant.plist
 ```
 
 ## Telegram Group Structure
@@ -126,7 +126,7 @@ The bot routes messages to 5 topic threads in a Telegram group:
 0 18 * * 1-5 cd ~/email_assistant && python3 -c "from job_tracker import send_daily_summary; send_daily_summary()"
 
 # Stock check at market open (9:30am ET = 6:30am PT) weekdays
-30 6 * * 1-5 python3 ~/Akshay/stockspredictor/stock_alerts.py
+30 6 * * 1-5 python3 ~/Nikhil/stockspredictor/stock_alerts.py
 ```
 
 Add these with `crontab -e`.
