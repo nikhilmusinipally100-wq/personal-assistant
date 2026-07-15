@@ -445,6 +445,41 @@ def handle_command(text):
         except Exception as e:
             return f"⚠️ Error: {e}"
 
+    if cmd.startswith("/addstock"):
+        ticker = text[len("/addstock"):].strip().upper()
+        if not ticker:
+            return "Usage: `/addstock TICKER`\nExample: `/addstock NVDA`"
+        try:
+            import sqlite3
+            conn = sqlite3.connect(str(STOCKS_DIR / "stocks_vanguard.db"))
+            conn.execute("CREATE TABLE IF NOT EXISTS favorites (ticker TEXT PRIMARY KEY)")
+            if conn.execute("SELECT 1 FROM favorites WHERE ticker=?", (ticker,)).fetchone():
+                conn.close()
+                return f"📊 {ticker} is already in your watchlist."
+            conn.execute("INSERT INTO favorites (ticker) VALUES (?)", (ticker,))
+            conn.commit()
+            conn.close()
+            return f"✅ Added *{ticker}* to your stock watchlist."
+        except Exception as e:
+            return f"⚠️ Error: {e}"
+
+    if cmd.startswith("/removestock"):
+        ticker = text[len("/removestock"):].strip().upper()
+        if not ticker:
+            return "Usage: `/removestock TICKER`\nExample: `/removestock TSLA`"
+        try:
+            import sqlite3
+            conn = sqlite3.connect(str(STOCKS_DIR / "stocks_vanguard.db"))
+            conn.execute("CREATE TABLE IF NOT EXISTS favorites (ticker TEXT PRIMARY KEY)")
+            deleted = conn.execute("DELETE FROM favorites WHERE ticker=?", (ticker,)).rowcount
+            conn.commit()
+            conn.close()
+            if deleted:
+                return f"✅ Removed *{ticker}* from your watchlist."
+            return f"❌ {ticker} wasn't in your watchlist."
+        except Exception as e:
+            return f"⚠️ Error: {e}"
+
     if cmd == "/jobs":
         try:
             return get_job_summary()
@@ -544,8 +579,11 @@ def handle_command(text):
                 "/schedule — today's calendar\n"
                 "/emails — last 2hrs email summary\n"
                 "/jobs — LinkedIn job alerts from Gmail\n"
-                "/stocks — check stock drops now\n"
                 "/post [topic] — post to LinkedIn\n\n"
+                "*Stocks:*\n"
+                "/stocks — check watchlist prices + drops now\n"
+                "/addstock [ticker] — add a stock (e.g. /addstock NVDA)\n"
+                "/removestock [ticker] — remove a stock\n\n"
                 "Or just chat with me normally!")
 
     return None
@@ -594,12 +632,13 @@ def run():
                         send_message(reply, thread_id=thread_id)
                         continue
 
-                # Respond in any topic or DM
+                # Conversational replies always go to the Chat topic,
+                # no matter which topic the message was sent from.
                 try:
                     reply = ask_claude(text)
-                    send_message(reply, thread_id=thread_id)
+                    send_message(reply)
                 except Exception as e:
-                    send_message(f"⚠️ Error: {e}", thread_id=thread_id)
+                    send_message(f"⚠️ Error: {e}")
 
         except KeyboardInterrupt:
             print("Bot stopped.")
